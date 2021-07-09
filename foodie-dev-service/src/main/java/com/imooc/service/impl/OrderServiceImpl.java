@@ -6,6 +6,7 @@ import com.imooc.mapper.OrderItemsMapper;
 import com.imooc.mapper.OrderStatusMapper;
 import com.imooc.mapper.OrdersMapper;
 import com.imooc.pojo.*;
+import com.imooc.pojo.bo.ShopcartBO;
 import com.imooc.pojo.bo.SubmitOrderBO;
 import com.imooc.pojo.vo.MerchantOrdersVO;
 import com.imooc.pojo.vo.OrderVO;
@@ -20,6 +21,7 @@ import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 import tk.mybatis.mapper.entity.Example;
 
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
@@ -46,7 +48,7 @@ public class OrderServiceImpl implements OrderService {
 
     @Transactional(propagation = Propagation.REQUIRED)
     @Override
-    public OrderVO createOrder(SubmitOrderBO submitOrderBO) {
+    public OrderVO createOrder(List<ShopcartBO> shopcartList, SubmitOrderBO submitOrderBO) {
         // 获取请求内容
         String userId = submitOrderBO.getUserId();
         String addressId = submitOrderBO.getAddressId();
@@ -66,9 +68,9 @@ public class OrderServiceImpl implements OrderService {
         newOrder.setReceiverName(address.getReceiver());
         newOrder.setReceiverMobile(address.getMobile());
         newOrder.setReceiverAddress(address.getProvince() + " "
-                                    + address.getCity()+ " "
-                                    + address.getDistrict() + " "
-                                    + address.getDetail());
+                + address.getCity() + " "
+                + address.getDistrict() + " "
+                + address.getDetail());
 
         newOrder.setPostAmount(postAmount);
         newOrder.setPayMethod(payMethod);
@@ -77,15 +79,18 @@ public class OrderServiceImpl implements OrderService {
         newOrder.setIsDelete(YesOrNo.NO.type);
         newOrder.setCreatedTime(new Date());
         newOrder.setUpdatedTime(new Date());
-        
-        // 2. 循环根据itemSpecIds保存订单商品信息表
+
+        // 2. 循环根据 itemSpecIds 保存订单商品信息表
         String[] itemSpecIdArr = itemSpecIds.split(",");
         Integer totalAmount = 0; // 商品原价累计
         Integer realPayAmount = 0; // 商品折扣后价格累计
-        for (String itemSpecId :
-                itemSpecIdArr) {
-            // TODO 整合redis后，商品购买的数量重新从redis的购物车中获取
-            int buyCounts = 1;
+        List<ShopcartBO> toBeRemovedShopcatdList = new ArrayList<>();
+
+        for (String itemSpecId : itemSpecIdArr) {
+            ShopcartBO cartItem = getBuyCountsFromShopcart(shopcartList, itemSpecId);
+            // 整合redis后，商品购买的数量重新从redis的购物车中获取
+            int buyCounts = cartItem.getBuyCounts();
+            toBeRemovedShopcatdList.add(cartItem);
 
             // 2.1 根据商品规格，查询规格具体信息，主要获取价格
             ItemsSpec itemsSpec = itemService.queryItemSpecById(itemSpecId);
@@ -136,8 +141,24 @@ public class OrderServiceImpl implements OrderService {
         OrderVO orderVO = new OrderVO();
         orderVO.setOrderId(orderId);
         orderVO.setMerchantOrdersVO(merchantOrdersVO);
+        orderVO.setToBeRemovedShopcatdList(toBeRemovedShopcatdList);
 
         return orderVO;
+    }
+
+    /**
+     * 从redis中的购物车里获取商品，目的：counts
+     * @param shopcartList
+     * @param specId
+     * @return
+     */
+    private ShopcartBO getBuyCountsFromShopcart(List<ShopcartBO> shopcartList, String specId) {
+        for (ShopcartBO cart : shopcartList) {
+            if (cart.getSpecId().equals(specId)) {
+                return cart;
+            }
+        }
+        return null;
     }
 
     @Transactional(propagation = Propagation.REQUIRED)
@@ -162,13 +183,13 @@ public class OrderServiceImpl implements OrderService {
         OrderStatus noPayOrderStatus = new OrderStatus();
         noPayOrderStatus.setOrderStatus(OrderStatusEnum.WAIT_PAY.type);
         List<OrderStatus> list = orderStatusMapper.select(noPayOrderStatus);
-        for (OrderStatus os:
-             list) {
+        for (OrderStatus os :
+                list) {
             // 获得订单创建时间
             Date createdTime = os.getCreatedTime();
             // 当前时间进行对比
             int day = DateUtil.daysBetween(createdTime, new Date());
-            if(day > 1){
+            if (day > 1) {
                 // 关闭订单
                 doCloseOrder(os.getOrderId());
             }

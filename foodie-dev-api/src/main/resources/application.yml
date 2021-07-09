@@ -16,7 +16,7 @@ server:
 ############################################################
 spring:
   redis:
-    database: 1
+    database: 2
     host: 127.0.0.1
     port: 6379
     password: 123456
@@ -24,7 +24,8 @@ spring:
     type: com.zaxxer.hikari.HikariDataSource          # 数据源类型：HikariCP
     driver-class-name: com.mysql.jdbc.Driver          # mysql驱动
     # 本机 url: url: jdbc:mysql://localhost:3306/foodie-shop?useUnicode=true&characterEncoding=UTF-8&autoReconnect=true
-    url: jdbc:mysql://49.233.188.8:3306/foodie-shop?useUnicode=true&characterEncoding=UTF-8&autoReconnect=true
+    url: jdbc:mysql://82.157.175.25:3306/foodie-shop?useUnicode=true&characterEncoding=UTF-8&autoReconnect=true
+#    url: jdbc:mysql://49.233.188.8:3306/foodie-shop?useUnicode=true&characterEncoding=UTF-8&autoReconnect=true
     username: root
     password: 123456
     # 本机 mysql:  password: root, 远程服务器 mysql: password: 123456
