@@ -39,7 +39,6 @@ public class PassportController {
         // 3. 请求成功，用户名没有重复
         return IMOOCJSONResult.ok();
     }
-
     @ApiOperation(value = "用户注册", notes = "用户注册", httpMethod = "POST")
     @PostMapping("/register")
     public IMOOCJSONResult register(@RequestBody UserBO userBO,

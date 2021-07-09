@@ -16,6 +16,8 @@ public class CorsConfig {
         // 1. 添加 cors 配置信息
         CorsConfiguration config = new CorsConfiguration();
         config.addAllowedOrigin("http://localhost:8080");
+//        config.addAllowedOrigin("http://82.157.175.25:8080");
+        config.addAllowedOrigin("http://49.233.188.8:8080");
 //        config.addAllowedOrigin("http://shop.z.mukewang.com:8080");
 //        config.addAllowedOrigin("http://center.z.mukewang.com:8080");
 //        config.addAllowedOrigin("http://shop.z.mukewang.com");

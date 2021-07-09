@@ -29,7 +29,7 @@ public class ServiceLogAspect {
      * 第二处 报名代表aop监控的类所在的子包
      * 第三处 .. 代表该包以及子包下所有类方法
      * 第四处 * 代表类名，* 代表所有类
-     * 第五处 *(..) * 代表类名的方法名，(..) 表示方法的任何参数
+     * 第五处 *(..) * 代表类名*的方法名，(..) 表示方法的任何参数
      * @param joinPoint
      * @return
      * @throws Throwable
